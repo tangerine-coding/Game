@@ -37,6 +37,7 @@
       transition: all 0.2s;
     }
 
+    /* Default colors */
     #red {
       background-color: red;
     }
@@ -53,8 +54,21 @@
       background-color: yellow;
     }
 
-    .square.active {
-      filter: brightness(1.5);
+    /* Darker colors when active */
+    #red.active {
+      background-color: darkred;
+    }
+
+    #blue.active {
+      background-color: darkblue;
+    }
+
+    #green.active {
+      background-color: darkgreen;
+    }
+
+    #yellow.active {
+      background-color: darkgoldenrod;
     }
 
     button {
@@ -100,7 +114,7 @@
     let playerSequence = [];
     let level = 0;
 
-    // Flash a single square
+    // Flash a single square (darker when active)
     const flashSquare = (square) => {
       square.classList.add('active');
       setTimeout(() => square.classList.remove('active'), 500);
