@@ -1,1 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simon Game</title>
+  <style>
+    /* Styling the game */
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #222;
+      color: white;
+    }
 
+    .game-container {
+      text-align: center;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 100px 100px;
+      grid-gap: 10px;
+      margin: 20px auto;
+    }
+
+    .square {
+      width: 100px;
+      height: 100px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    #red {
+      background-color: red;
+    }
+
+    #blue {
+      background-color: blue;
+    }
+
+    #green {
+      background-color: green;
+    }
+
+    #yellow {
+      background-color: yellow;
+    }
+
+    .square.active {
+      filter: brightness(1.5);
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      background-color: #444;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    button:hover {
+      background-color: #666;
+    }
+
+    #message {
+      margin-top: 20px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <h1>Simon Game</h1>
+    <div class="grid">
+      <div class="square" id="red"></div>
+      <div class="square" id="blue"></div>
+      <div class="square" id="green"></div>
+      <div class="square" id="yellow"></div>
+    </div>
+    <button id="start-button">Start Game</button>
+    <p id="message">Press "Start Game" to begin!</p>
+  </div>
+  <script>
+    // JavaScript logic for the game
+    const squares = document.querySelectorAll('.square');
+    const message = document.getElementById('message');
+    const startButton = document.getElementById('start-button');
+
+    let sequence = [];
+    let playerSequence = [];
+    let level = 0;
+
+    // Flash a single square
+    const flashSquare = (square) => {
+      square.classList.add('active');
+      setTimeout(() => square.classList.remove('active'), 500);
+    };
+
+    // Play the bot's sequence
+    const playSequence = async () => {
+      for (const color of sequence) {
+        const square = document.getElementById(color);
+        flashSquare(square);
+        await new Promise((resolve) => setTimeout(resolve, 800));
+      }
+    };
+
+    // Start a new round
+    const nextRound = () => {
+      playerSequence = [];
+      level++;
+      message.textContent = `Level ${level}`;
+      const colors = ['red', 'blue', 'green', 'yellow'];
+      const nextColor = colors[Math.floor(Math.random() * colors.length)];
+      sequence.push(nextColor);
+      playSequence();
+    };
+
+    // Check the player's input
+    const checkInput = (color) => {
+      playerSequence.push(color);
+      const index = playerSequence.length - 1;
+      if (playerSequence[index] !== sequence[index]) {
+        message.textContent = `Game Over! You reached Level ${level}. Press "Start Game" to try again.`;
+        sequence = [];
+        playerSequence = [];
+        level = 0;
+        return;
+      }
+
+      // Check if the player completed the sequence
+      if (playerSequence.length === sequence.length) {
+        setTimeout(nextRound, 1000);
+      }
+    };
+
+    // Add click event listeners to squares
+    squares.forEach((square) => {
+      square.addEventListener('click', () => {
+        if (sequence.length === 0) return; // Ignore clicks before game starts
+        const color = square.id;
+        flashSquare(square);
+        checkInput(color);
+      });
+    });
+
+    // Start the game
+    startButton.addEventListener('click', () => {
+      sequence = [];
+      playerSequence = [];
+      level = 0;
+      message.textContent = 'Watch the sequence...';
+      setTimeout(nextRound, 1000);
+    });
+  </script>
+</body>
+</html>
