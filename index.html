@@ -3,179 +3,304 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Simon Game</title>
+  <title>Stickman Gangnam Style Dance</title>
   <style>
-    /* Styling the game */
-    body {
-      font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
+    * {
       margin: 0;
-      background-color: #222;
-      color: white;
+      padding: 0;
+      box-sizing: border-box;
     }
 
-    .game-container {
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: 'Arial', sans-serif;
+    }
+
+    .container {
       text-align: center;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 40px;
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     }
 
-    .grid {
-      display: grid;
-      grid-template-columns: 100px 100px;
-      grid-gap: 10px;
-      margin: 20px auto;
+    h1 {
+      color: white;
+      margin-bottom: 30px;
+      font-size: 2.5em;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
     }
 
-    .square {
-      width: 100px;
-      height: 100px;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: all 0.2s;
+    canvas {
+      display: block;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 15px;
+      margin: 0 auto 30px;
+      border: 3px solid white;
     }
 
-    /* Default colors */
-    #red {
-      background-color: red;
-    }
-
-    #blue {
-      background-color: blue;
-    }
-
-    #green {
-      background-color: green;
-    }
-
-    #yellow {
-      background-color: yellow;
-    }
-
-    /* Darker colors when active */
-    #red.active {
-      background-color: darkred;
-    }
-
-    #blue.active {
-      background-color: darkblue;
-    }
-
-    #green.active {
-      background-color: darkgreen;
-    }
-
-    #yellow.active {
-      background-color: darkgoldenrod;
+    .controls {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
     }
 
     button {
-      padding: 10px 20px;
-      font-size: 16px;
-      border: none;
-      background-color: #444;
-      color: white;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-
-    button:hover {
-      background-color: #666;
-    }
-
-    #message {
-      margin-top: 20px;
+      padding: 15px 40px;
       font-size: 18px;
+      font-weight: bold;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      color: white;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    #startBtn {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
+    }
+
+    #startBtn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(245, 87, 108, 0.6);
+    }
+
+    #startBtn:active {
+      transform: translateY(0);
+    }
+
+    #stopBtn {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+    }
+
+    #stopBtn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(79, 172, 254, 0.6);
+    }
+
+    #stopBtn:active {
+      transform: translateY(0);
     }
   </style>
 </head>
 <body>
-  <div class="game-container">
-    <h1>Simon Game</h1>
-    <div class="grid">
-      <div class="square" id="red"></div>
-      <div class="square" id="blue"></div>
-      <div class="square" id="green"></div>
-      <div class="square" id="yellow"></div>
+  <div class="container">
+    <h1>🕺 Gangnam Style 🕺</h1>
+    <canvas id="danceCanvas" width="600" height="500"></canvas>
+    <div class="controls">
+      <button id="startBtn">Start Dancing</button>
+      <button id="stopBtn">Stop</button>
     </div>
-    <button id="start-button">Start Game</button>
-    <p id="message">Press "Start Game" to begin!</p>
   </div>
+
   <script>
-    // JavaScript logic for the game
-    const squares = document.querySelectorAll('.square');
-    const message = document.getElementById('message');
-    const startButton = document.getElementById('start-button');
+    const canvas = document.getElementById('danceCanvas');
+    const ctx = canvas.getContext('2d');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
 
-    let sequence = [];
-    let playerSequence = [];
-    let level = 0;
+    let animationId = null;
+    let isRunning = false;
+    let frameCount = 0;
 
-    // Flash a single square (darker when active)
-    const flashSquare = (square) => {
-      square.classList.add('active');
-      setTimeout(() => square.classList.remove('active'), 500);
-    };
+    // Stickman drawing function
+    function drawStickman(x, y, pose) {
+      // Head
+      ctx.beginPath();
+      ctx.arc(x, y - 60, 20, 0, Math.PI * 2);
+      ctx.fillStyle = '#FFD700';
+      ctx.fill();
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 3;
+      ctx.stroke();
 
-    // Play the bot's sequence
-    const playSequence = async () => {
-      for (const color of sequence) {
-        const square = document.getElementById(color);
-        flashSquare(square);
-        await new Promise((resolve) => setTimeout(resolve, 800));
+      // Eyes
+      ctx.fillStyle = '#000';
+      ctx.beginPath();
+      ctx.arc(x - 7, y - 65, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(x + 7, y - 65, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Smile
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(x, y - 60, 8, 0, Math.PI, false);
+      ctx.stroke();
+
+      // Body
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = '#FF0000';
+      ctx.beginPath();
+      ctx.moveTo(x, y - 40);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+
+      // Legs and Arms based on pose
+      if (pose === 0) {
+        // Pose 1: Horse riding stance
+        ctx.strokeStyle = '#0000FF';
+        ctx.lineWidth = 4;
+        // Left arm
+        ctx.beginPath();
+        ctx.moveTo(x, y - 30);
+        ctx.lineTo(x - 35, y - 20);
+        ctx.stroke();
+        // Right arm
+        ctx.beginPath();
+        ctx.moveTo(x, y - 30);
+        ctx.lineTo(x + 35, y - 20);
+        ctx.stroke();
+        // Left leg
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x - 30, y + 50);
+        ctx.stroke();
+        // Right leg
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + 30, y + 50);
+        ctx.stroke();
+      } else if (pose === 1) {
+        // Pose 2: Lasso motion (right arm up)
+        ctx.strokeStyle = '#0000FF';
+        ctx.lineWidth = 4;
+        // Left arm down
+        ctx.beginPath();
+        ctx.moveTo(x, y - 30);
+        ctx.lineTo(x - 20, y + 20);
+        ctx.stroke();
+        // Right arm up in lasso motion
+        ctx.beginPath();
+        ctx.moveTo(x, y - 30);
+        ctx.lineTo(x + 40, y - 50);
+        ctx.stroke();
+        // Left leg
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x - 35, y + 45);
+        ctx.stroke();
+        // Right leg
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + 25, y + 55);
+        ctx.stroke();
+      } else if (pose === 2) {
+        // Pose 3: Hip thrust (leaning back)
+        ctx.strokeStyle = '#0000FF';
+        ctx.lineWidth = 4;
+        // Left arm
+        ctx.beginPath();
+        ctx.moveTo(x, y - 30);
+        ctx.lineTo(x - 40, y - 15);
+        ctx.stroke();
+        // Right arm
+        ctx.beginPath();
+        ctx.moveTo(x, y - 30);
+        ctx.lineTo(x + 40, y - 15);
+        ctx.stroke();
+        // Left leg extended
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x - 25, y + 55);
+        ctx.stroke();
+        // Right leg bent
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + 40, y + 35);
+        ctx.stroke();
+      } else if (pose === 3) {
+        // Pose 4: Transition (arms down, legs together)
+        ctx.strokeStyle = '#0000FF';
+        ctx.lineWidth = 4;
+        // Left arm
+        ctx.beginPath();
+        ctx.moveTo(x, y - 30);
+        ctx.lineTo(x - 25, y + 15);
+        ctx.stroke();
+        // Right arm
+        ctx.beginPath();
+        ctx.moveTo(x, y - 30);
+        ctx.lineTo(x + 25, y + 15);
+        ctx.stroke();
+        // Left leg
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x - 15, y + 50);
+        ctx.stroke();
+        // Right leg
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + 15, y + 50);
+        ctx.stroke();
       }
-    };
+    }
 
-    // Start a new round
-    const nextRound = () => {
-      playerSequence = [];
-      level++;
-      message.textContent = `Level ${level}`;
-      const colors = ['red', 'blue', 'green', 'yellow'];
-      const nextColor = colors[Math.floor(Math.random() * colors.length)];
-      sequence.push(nextColor);
-      playSequence();
-    };
+    // Draw floating notes
+    function drawNote(x, y, size) {
+      ctx.font = `${size}px Arial`;
+      ctx.fillStyle = '#FFD700';
+      ctx.globalAlpha = 0.7;
+      ctx.fillText('♫', x, y);
+      ctx.globalAlpha = 1;
+    }
 
-    // Check the player's input
-    const checkInput = (color) => {
-      playerSequence.push(color);
-      const index = playerSequence.length - 1;
-      if (playerSequence[index] !== sequence[index]) {
-        message.textContent = `Game Over! You reached Level ${level}. Press "Start Game" to try again.`;
-        sequence = [];
-        playerSequence = [];
-        level = 0;
-        return;
+    // Animation loop
+    function animate() {
+      // Clear canvas
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Determine pose (4 poses, each lasts 20 frames)
+      const pose = Math.floor((frameCount / 20) % 4);
+
+      // Draw stickman
+      drawStickman(canvas.width / 2, canvas.height / 2, pose);
+
+      // Draw floating notes
+      drawNote(100 + Math.sin(frameCount * 0.02) * 30, 100 - frameCount % 200, 40);
+      drawNote(canvas.width - 100 + Math.cos(frameCount * 0.02) * 30, 150 - frameCount % 250, 35);
+
+      frameCount++;
+
+      if (isRunning) {
+        animationId = requestAnimationFrame(animate);
       }
+    }
 
-      // Check if the player completed the sequence
-      if (playerSequence.length === sequence.length) {
-        setTimeout(nextRound, 1000);
+    // Button event listeners
+    startBtn.addEventListener('click', () => {
+      if (!isRunning) {
+        isRunning = true;
+        frameCount = 0;
+        animate();
       }
-    };
-
-    // Add click event listeners to squares
-    squares.forEach((square) => {
-      square.addEventListener('click', () => {
-        if (sequence.length === 0) return; // Ignore clicks before game starts
-        const color = square.id;
-        flashSquare(square);
-        checkInput(color);
-      });
     });
 
-    // Start the game
-    startButton.addEventListener('click', () => {
-      sequence = [];
-      playerSequence = [];
-      level = 0;
-      message.textContent = 'Watch the sequence...';
-      setTimeout(nextRound, 1000);
+    stopBtn.addEventListener('click', () => {
+      isRunning = false;
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
+      // Clear and draw final pose
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawStickman(canvas.width / 2, canvas.height / 2, 0);
     });
+
+    // Initial draw
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawStickman(canvas.width / 2, canvas.height / 2, 0);
   </script>
 </body>
 </html>
